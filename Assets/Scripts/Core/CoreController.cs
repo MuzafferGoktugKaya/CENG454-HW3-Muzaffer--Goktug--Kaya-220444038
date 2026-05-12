@@ -25,6 +25,14 @@ public class CoreController : MonoBehaviour, IDamageable
         if (currentHealth <= 0) Die();
     }
 
+    void Update() //for testing purposes, will remove later
+{
+    if (Input.GetKeyDown(KeyCode.Space))
+    {
+        TakeDamage(10f); // Her space basışında 10 hasar verir
+    }
+}
+
     public void Die()
     {
         Debug.Log("Core Breached! Game Over.");
