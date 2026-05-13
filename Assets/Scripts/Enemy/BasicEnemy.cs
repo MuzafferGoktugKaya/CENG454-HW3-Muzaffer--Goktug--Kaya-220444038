@@ -3,37 +3,36 @@ using UnityEngine;
 public class BasicEnemy : MonoBehaviour, IEnemy
 {
     private Transform coreTarget;
-    [SerializeField] private float speed = 2f;
-    [SerializeField] private float damage = 10f;
+    private IAttackStrategy attackStrategy;
+    
+    [SerializeField] private GenericObjectPool projectilePool;
+    [SerializeField] private float attackInterval = 2f;
+    private float nextAttackTime;
 
     public void Initialize(Transform target)
     {
         coreTarget = target;
+        attackStrategy = new ShootingAttackStrategy(); 
     }
 
     void Update()
     {
         if (coreTarget == null) return;
 
-        transform.position = Vector3.MoveTowards(transform.position, coreTarget.position, speed * Time.deltaTime);
+        // Çekirdeğe doğru ilerle
+        transform.position = Vector3.MoveTowards(transform.position, coreTarget.position, 2f * Time.deltaTime);
+        transform.LookAt(coreTarget); // Hedefe doğru bak
+
+        // Mesafe kontrolü ve saldırı zamanlaması
+        if (Time.time >= nextAttackTime)
+        {
+            Attack();
+            nextAttackTime = Time.time + attackInterval;
+        }
     }
 
     public void Attack()
     {
-        //Will be connected to observer
-        Debug.Log("Enemy attacking the core!");
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player") || other.name.Contains("Core"))
-        {
-            IDamageable damageable = other.GetComponent<IDamageable>();
-            if (damageable != null)
-            {
-                damageable.TakeDamage(damage);
-                Destroy(gameObject); // destroy it atm, but we will change this to pooling later
-            }
-        }
-    }
+        // Stratejiyi kullanarak ateş et!
+attackStrategy?.Attack(transform, coreTarget, projectilePool);    }
 }
