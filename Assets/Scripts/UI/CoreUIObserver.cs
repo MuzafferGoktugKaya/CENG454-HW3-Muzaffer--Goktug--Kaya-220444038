@@ -15,13 +15,11 @@ public class CoreUIObserver : MonoBehaviour
 
     private void OnEnable()
     {
-        // Observer Kaydı: Mesajı dinlemeye başlaması için
         CoreController.OnCoreHealthChanged += UpdateHealthUI;
     }
 
     private void OnDisable()
     {
-        // Temizlik: Hafıza sızıntısını önlemek için
         CoreController.OnCoreHealthChanged -= UpdateHealthUI;
     }
 
@@ -30,7 +28,6 @@ public class CoreUIObserver : MonoBehaviour
         if (healthBar != null)
         {
             healthBar.value = healthPercent;
-            // Görsel efekt: Can azaldıkça bar kırmızıya döner
             fillImage.color = Color.Lerp(criticalColor, healthyColor, healthPercent);
         }
     }
