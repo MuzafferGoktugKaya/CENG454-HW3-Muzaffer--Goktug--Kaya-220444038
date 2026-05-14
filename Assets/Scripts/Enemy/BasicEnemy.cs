@@ -5,6 +5,7 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     [Header("Settings")]
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float attackInterval = 2f;
+    [SerializeField] private int maxHealth = 100;
     
     [Header("References")]
     [SerializeField] private GenericObjectPool projectilePool;
@@ -15,14 +16,19 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     private IMovementStrategy movementStrategy;
     private IAttackStrategy attackStrategy;
 
+    // IEnemy metodları
+    public float GetSpeed() => moveSpeed;
+    public int GetHealth() => maxHealth;
+
     public void Initialize(Transform target)
     {
         coreTarget = target;
         
+        //stratejiler belirlenir
         if (movementStrategy == null) movementStrategy = new MoveToCoreStrategy();
         if (attackStrategy == null) attackStrategy = new ShootingAttackStrategy();
 
-        // to prevent type mismatch in Unity itself
+        // Havuz referansını otomatik bağla
         if (projectilePool == null)
         {
             GameObject poolObj = GameObject.Find("ProjectilePool");
@@ -40,9 +46,9 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     {
         if (coreTarget == null) return;
 
-        // MoveToCore or Zigzag
         movementStrategy?.Move(this.transform, coreTarget, moveSpeed);
 
+        // Saldırı zamanlaması
         if (Time.time >= nextAttackTime)
         {
             Attack();
@@ -51,17 +57,17 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     }
 
     private void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("EnergyCore"))
     {
-        IDamageable core = other.GetComponent<IDamageable>();
-        if (core != null)
+        if (other.CompareTag("EnergyCore"))
         {
-            core.TakeDamage(20f);
-            Die();
+            IDamageable core = other.GetComponent<IDamageable>();
+            if (core != null)
+            {
+                core.TakeDamage(20f);
+                Die();
+            }
         }
     }
-}
 
     public void Attack()
     {
@@ -74,5 +80,6 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     public void Die()
     {
         gameObject.SetActive(false);
+
     }
 }

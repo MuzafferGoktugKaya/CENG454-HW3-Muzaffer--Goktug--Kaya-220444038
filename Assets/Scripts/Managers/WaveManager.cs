@@ -51,25 +51,33 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    void SpawnEnemy()
+void SpawnEnemy()
     {
         if (enemyPrefab == null) return;
 
+        // find spawn point and create object
         Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Count)];
-        GameObject enemy = Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
+        GameObject enemyObj = Instantiate(enemyPrefab, spawnPoint.position, spawnPoint.rotation);
         
-        BasicEnemy enemyScript = enemy.GetComponent<BasicEnemy>();
+        // we create the basic enemy
+        BasicEnemy enemyScript = enemyObj.GetComponent<BasicEnemy>();
         
+        // find the core to target
         CoreController core = UnityEngine.Object.FindFirstObjectByType<CoreController>();
 
         if (enemyScript != null && core != null)
         {
+            // we use decorator to add armor
+            IEnemy armoredEnemy = new ArmoredEnemyDecorator(enemyScript);
+
+            // decide on strategy at random
             if (UnityEngine.Random.value > 0.5f)
                 enemyScript.SetMovementStrategy(new MoveToCoreStrategy());
             else
                 enemyScript.SetMovementStrategy(new ZigZagStrategy());
 
-            enemyScript.Initialize(core.transform);
+            // location of core to attack
+            armoredEnemy.Initialize(core.transform);
         }
     }
 }
