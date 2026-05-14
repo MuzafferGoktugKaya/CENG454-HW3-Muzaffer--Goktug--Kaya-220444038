@@ -65,6 +65,6 @@ public class CoreController : MonoBehaviour, IDamageable
     public void Die()
     {
         Debug.Log("Core Breached! Game Over.");
-        // template for future game over sequence
+        Time.timeScale = 0f;
     }
 }

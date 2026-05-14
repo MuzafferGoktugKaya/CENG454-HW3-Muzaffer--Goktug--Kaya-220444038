@@ -13,35 +13,49 @@ public class GenericObjectPool : MonoBehaviour
         // Başlangıçta havuzu doldur
         for (int i = 0; i < poolSize; i++)
         {
-GameObject obj = Instantiate(prefab, Vector3.zero, Quaternion.identity); 
-obj.transform.SetParent(null); // Herhangi bir objenin altına girmeyecek böylece
+            CreateNewObject();
         }
+    }
+
+    private GameObject CreateNewObject()
+    {
+        if (prefab == null) return null;
+
+        GameObject obj = Instantiate(prefab, transform); 
+        obj.SetActive(false); 
+        pool.Enqueue(obj);
+        return obj;
     }
 
     public GameObject GetFromPool(Vector3 position, Quaternion rotation)
     {
-if (pool.Count > 0)
-    {
-        GameObject obj = pool.Dequeue();
-        
-        obj.transform.position = position;
-        obj.transform.rotation = rotation;
-        
-        obj.SetActive(true);
-        return obj;
-    }
-        else
+        GameObject obj = null;
+
+        while (pool.Count > 0)
         {
-            GameObject obj = Instantiate(prefab);
-            obj.transform.position = position;
-            obj.transform.rotation = rotation;
-            return obj;
+            obj = pool.Dequeue();
+
+            if (obj != null)
+            {
+                obj.transform.position = position;
+                obj.transform.rotation = rotation;
+                obj.transform.SetParent(null); // Havuzun altından çıkar ki bağımsız hareket etsin
+                obj.SetActive(true);
+                return obj;
+            }
         }
+
+        Debug.LogWarning("Havuz boşaldı veya objeler yok edildi, yeni obje yaratılıyor.");
+        obj = Instantiate(prefab, position, rotation);
+        return obj;
     }
 
     public void ReturnToPool(GameObject obj)
     {
+        if (obj == null) return;
+
         obj.SetActive(false);
+        obj.transform.SetParent(transform); 
         pool.Enqueue(obj);
     }
 }

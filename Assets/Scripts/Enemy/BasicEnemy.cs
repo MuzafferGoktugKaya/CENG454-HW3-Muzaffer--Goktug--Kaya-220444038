@@ -2,28 +2,47 @@ using UnityEngine;
 
 public class BasicEnemy : MonoBehaviour, IEnemy
 {
-    private Transform coreTarget;
-    private IAttackStrategy attackStrategy;
-    
-    [SerializeField] private GenericObjectPool projectilePool;
+    [Header("Settings")]
+    [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float attackInterval = 2f;
+    
+    [Header("References")]
+    [SerializeField] private GenericObjectPool projectilePool;
+
+    private Transform coreTarget;
     private float nextAttackTime;
+    
+    private IMovementStrategy movementStrategy;
+    private IAttackStrategy attackStrategy;
 
     public void Initialize(Transform target)
     {
         coreTarget = target;
-        attackStrategy = new ShootingAttackStrategy(); 
+        
+        if (movementStrategy == null) movementStrategy = new MoveToCoreStrategy();
+        if (attackStrategy == null) attackStrategy = new ShootingAttackStrategy();
+
+        // to prevent type mismatch in Unity itself
+        if (projectilePool == null)
+        {
+            GameObject poolObj = GameObject.Find("ProjectilePool");
+            if (poolObj != null)
+            {
+                projectilePool = poolObj.GetComponent<GenericObjectPool>();
+            }
+        }
     }
+
+    public void SetMovementStrategy(IMovementStrategy strategy) => movementStrategy = strategy;
+    public void SetAttackStrategy(IAttackStrategy strategy) => attackStrategy = strategy;
 
     void Update()
     {
         if (coreTarget == null) return;
 
-        // Çekirdeğe doğru ilerle
-        transform.position = Vector3.MoveTowards(transform.position, coreTarget.position, 2f * Time.deltaTime);
-        transform.LookAt(coreTarget); // Hedefe doğru bak
+        // MoveToCore or Zigzag
+        movementStrategy?.Move(this.transform, coreTarget, moveSpeed);
 
-        // Mesafe kontrolü ve saldırı zamanlaması
         if (Time.time >= nextAttackTime)
         {
             Attack();
@@ -31,8 +50,29 @@ public class BasicEnemy : MonoBehaviour, IEnemy
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("EnergyCore"))
+    {
+        IDamageable core = other.GetComponent<IDamageable>();
+        if (core != null)
+        {
+            core.TakeDamage(20f);
+            Die();
+        }
+    }
+}
+
     public void Attack()
     {
-        // Stratejiyi kullanarak ateş et!
-attackStrategy?.Attack(transform, coreTarget, projectilePool);    }
+        if (projectilePool != null)
+        {
+            attackStrategy?.Attack(transform, coreTarget, projectilePool);
+        }
+    }
+
+    public void Die()
+    {
+        gameObject.SetActive(false);
+    }
 }

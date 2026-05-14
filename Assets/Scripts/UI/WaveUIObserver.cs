@@ -5,9 +5,21 @@ public class WaveUIObserver : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI counterText;
 
-    // for tomorrow's wave system
-    public void UpdateEnemyCount(int remaining)
+    private void OnEnable()
     {
-        counterText.text = $"Enemies Left: {remaining}";
+        WaveManager.OnWaveChanged += UpdateWaveDisplay;
+    }
+
+    private void OnDisable()
+    {
+        WaveManager.OnWaveChanged -= UpdateWaveDisplay;
+    }
+
+    private void UpdateWaveDisplay(int currentWaveNumber)
+    {
+        if (counterText != null)
+        {
+            counterText.text = $"Wave: {currentWaveNumber}";
+        }
     }
 }
