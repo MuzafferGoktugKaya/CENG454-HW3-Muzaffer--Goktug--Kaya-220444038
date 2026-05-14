@@ -6,36 +6,31 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     [SerializeField] private float moveSpeed = 3f;
     [SerializeField] private float attackInterval = 2f;
     [SerializeField] private int maxHealth = 100;
-    
+    private int currentHealth; 
+
     [Header("References")]
     [SerializeField] private GenericObjectPool projectilePool;
 
     private Transform coreTarget;
     private float nextAttackTime;
-    
     private IMovementStrategy movementStrategy;
     private IAttackStrategy attackStrategy;
 
-    // IEnemy metodları
     public float GetSpeed() => moveSpeed;
-    public int GetHealth() => maxHealth;
+    public int GetHealth() => currentHealth;
 
     public void Initialize(Transform target)
     {
         coreTarget = target;
+        currentHealth = maxHealth; 
         
-        //stratejiler belirlenir
         if (movementStrategy == null) movementStrategy = new MoveToCoreStrategy();
         if (attackStrategy == null) attackStrategy = new ShootingAttackStrategy();
 
-        // Havuz referansını otomatik bağla
         if (projectilePool == null)
         {
             GameObject poolObj = GameObject.Find("ProjectilePool");
-            if (poolObj != null)
-            {
-                projectilePool = poolObj.GetComponent<GenericObjectPool>();
-            }
+            if (poolObj != null) projectilePool = poolObj.GetComponent<GenericObjectPool>();
         }
     }
 
@@ -45,10 +40,8 @@ public class BasicEnemy : MonoBehaviour, IEnemy
     void Update()
     {
         if (coreTarget == null) return;
-
         movementStrategy?.Move(this.transform, coreTarget, moveSpeed);
-
-        // Saldırı zamanlaması
+        
         if (Time.time >= nextAttackTime)
         {
             Attack();
@@ -69,17 +62,18 @@ public class BasicEnemy : MonoBehaviour, IEnemy
         }
     }
 
-    public void Attack()
+    public void Attack() => attackStrategy?.Attack(transform, coreTarget, projectilePool);
+
+    // space bar logic çağıracak
+    public void TakeDamage(int amount)
     {
-        if (projectilePool != null)
-        {
-            attackStrategy?.Attack(transform, coreTarget, projectilePool);
-        }
+        currentHealth -= amount;
+        Debug.Log(gameObject.name + " took damage! Remaining: " + currentHealth);
+        if (currentHealth <= 0) Die();
     }
 
     public void Die()
     {
         gameObject.SetActive(false);
-
     }
 }

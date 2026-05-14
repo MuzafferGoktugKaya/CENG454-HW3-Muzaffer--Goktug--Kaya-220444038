@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - EnergyCore
+  - Enemy
   layers:
   - Default
   - TransparentFX

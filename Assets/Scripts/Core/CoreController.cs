@@ -1,32 +1,27 @@
 using UnityEngine;
 using System;
 using System.Collections;
-using UnityEngine.InputSystem;
 
 public class CoreController : MonoBehaviour, IDamageable
 {
     [SerializeField] private float maxHealth = 100f;
     private float currentHealth;
+    public float Health => currentHealth; 
+
     private MeshRenderer meshRenderer;
     private Color originalColor;
-
-    public float Health => currentHealth;
 
     public static event Action<float> OnCoreHealthChanged;
 
     void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
-        if (meshRenderer != null)
-        {
-            originalColor = meshRenderer.material.color;
-        }
+        if (meshRenderer != null) originalColor = meshRenderer.material.color;
     }
 
     void Start()
     {
         currentHealth = maxHealth;
-        // makes health 100% at the start 
         OnCoreHealthChanged?.Invoke(1.0f);
     }
 
@@ -35,21 +30,12 @@ public class CoreController : MonoBehaviour, IDamageable
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0);
         
-        // for notifying observers
+        // UI Gözlemcilerini bilgilendir
         OnCoreHealthChanged?.Invoke(currentHealth / maxHealth);
-
-        // makes core pitch white
+        
         StartCoroutine(HitEffectRoutine());
 
         if (currentHealth <= 0) Die();
-    }
-
-    void Update() 
-    {
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            TakeDamage(10f);
-        }
     }
 
     private IEnumerator HitEffectRoutine()
@@ -65,6 +51,6 @@ public class CoreController : MonoBehaviour, IDamageable
     public void Die()
     {
         Debug.Log("Core Breached! Game Over.");
-        Time.timeScale = 0f;
+        GameManager.Instance.GameOver(); 
     }
 }
